@@ -1,6 +1,4 @@
-import config
-
-print('load companies.py')
+import utils.config as config
 
 def grab():
     """
@@ -17,6 +15,7 @@ def datarange():
     """
     try:
         print('grab datarange')
+        print(config.module_message)
     except Exception as e:
         print(e)
 

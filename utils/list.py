@@ -1,5 +1,3 @@
-print('load lists.py')
-
 def merge(l1, l2):
     """
     Merge two sorted lists into one sorted list

@@ -1,8 +1,4 @@
-import utils.config as config
-import utils.list as list
-import utils.company as company
-
-print('load utils.py')
+__all__ = ['config', 'company', 'list']
 
 if __name__ == '__main__':
     try:
