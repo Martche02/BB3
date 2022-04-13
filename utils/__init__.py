@@ -1,4 +1,5 @@
 __all__ = ['config', 'company', 'list']
+import utils.config as config
 
 if __name__ == '__main__':
     try:
