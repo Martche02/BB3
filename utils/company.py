@@ -1,4 +1,6 @@
 import utils.config as config
+import utils.system as system
+import sys
 
 def grab():
     """
@@ -15,9 +17,9 @@ def datarange():
     """
     try:
         print('grab datarange')
-        print(config.module_message)
     except Exception as e:
-        print(e)
+        system.trouble(e, sys._getframe().f_code.co_name)
+
 
 
 if __name__ == '__main__':

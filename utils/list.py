@@ -1,6 +1,6 @@
 import utils.config as config
 
-def merge(l1, l2):
+def merge(l1, l2): # l1 is the larger list
     """
     Merge two sorted lists into one sorted list
     """
@@ -15,7 +15,7 @@ def merge(l1, l2):
     except Exception as e:
         print(e)
 
-def subtract(l1, l2):
+def subtract(l1, l2): # l1 is the larger list
     """
     Subtract l2 from l1
     """
