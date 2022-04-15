@@ -78,14 +78,14 @@ def datarange(timestamp):
   """get company data range"""
     # print(sys._getframe().f_code.co_name)
   try:
+    project = project_load()
+    # project = 'csv'
+
     # get companies
     filename = 'companies'
     companies = list.from_csv(filename)
     if not companies:
       companies = grab(timestamp)
-
-    # project = project_load()
-    project = 'csv'
 
     # get company data range
     for c, company in enumerate(companies):
@@ -171,8 +171,94 @@ def datarange_from_web(company, filename, company_not_found):
     return company_datarange, company_not_found
   except Exception as e:
     return [], company_not_found
-def stock_price(company):
-  print(company)
+def stock_price(timestamp):
+    """get company stock prices"""
+    # print(sys._getframe().f_code.co_name)
+    try:
+      # project = project_load()
+      project = 'csv'
+
+      # get companies
+      filename = 'companies'
+      companies = list.from_csv(filename)
+      if not companies:
+        companies = grab(timestamp)
+
+      # get company data range
+      company_full_datarange = []
+      for c, company in enumerate(companies):
+        print(c, company[0])
+        filename = company[0] + ' datarange'
+
+        # get datarange
+        datarange = list.from_csv(filename)
+        company_not_found = []
+        if not datarange:
+          # there is no csv, load from web
+          datarange, company_not_found = datarange_from_web(company, filename, company_not_found)
+        if datarange:
+          # get historical stock prices
+          if project == 'csv':
+            # load from csv
+            company_historical = []
+            file = False
+            company_historical = company_historical(c, company, datarange)
+          else:
+            # load from web
+            pass
+
+
+
+
+          if company_historical and not file:
+              hist = []
+              for t, table in enumerate(company_historical):
+                  for l, line in enumerate(table):
+                      hist.append(line)
+              hist.sort(key=lambda x: x[0], reverse=True)
+              # hist.sort(key=lambda x: x[1], reverse=True)
+              filename = company[0] + ' historical price'
+              company_historical = list_to_csv(filename, hist)
+
+    except Exception as e:
+        trouble(e, sys._getframe().f_code.co_name)
+
+def company_historical(c, company, datarange):
+  ''' load historical quotes from b3 '''
+  # print(sys._getframe().f_code.co_name)
+  try:
+    for d, data in enumerate(datarange):
+      print(k, company[0], d, data[1])
+      filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
+      table = list.from_csv(filename_historical)
+
+
+
+
+                if not (table or table == [' ']):
+                    table = []
+                    data_1 = datetime.strptime(data[1], '%Y-%m')
+                    data_1 = data_1.strftime('%m-%Y')
+                    url = 'https://bvmf.bmfbovespa.com.br/sig/FormConsultaMercVista.asp?strTipoResumo=RES_MERC_VISTA&strSocEmissora=' + data[0] + '&strDtReferencia=' + data_1 + '&intCodNivel=2&intCodCtrl=160'
+                    manual_trouble = [['BEPA', '2003-08'], ['BEPA', '2003-06'], ['BEPA', '2003-04'], ['BEPA', '2003-03'], ['BEPA', '2003-02']]
+                    manual_trouble_0 = ['BEPA']
+                    if data[0] in manual_trouble_0:
+                        print('trouble', manual_trouble_0)
+                    else:
+                        browser.get(url)
+                        for r in range(0,20,2):
+                            xpath = '//*[@id="tblResDiario"]/tbody/tr[' + str(r) + ']/td/table'
+                            quotes = get_quotes(xpath, data)
+                            if quotes:
+                                table.append(quotes)
+                        table = [item for sublist in table for item in sublist]
+                        if not table:
+                            table = [' ']
+                        table = list_to_csv(filename_historical_price, table)
+                        company_historical.append(table)
+
+  except Exception as e:
+    trouble(e, sys._getframe().f_code.co_name)
 
 
 if __name__ == '__main__':
