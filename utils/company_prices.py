@@ -108,6 +108,7 @@ def datarange(timestamp):
     return datarange
   except Exception as e:
     system.trouble(e, sys._getframe().f_code.co_name)
+
 def datarange_from_web(company, filename, company_not_found):
   ''' load from web'''
     # print(sys._getframe().f_code.co_name)

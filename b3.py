@@ -8,5 +8,5 @@ if __name__ == '__main__':
 
     system.browser.get('https://www.google.com/')
     
-    app = config.app(config.timestamp)
+    app = config.app()
     print('done')
