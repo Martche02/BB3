@@ -175,8 +175,8 @@ def stock_price(timestamp):
     """get company stock prices"""
     # print(sys._getframe().f_code.co_name)
     try:
-      # project = project_load()
-      project = 'csv'
+      project = project_load()
+      # project = 'csv'
 
       # get companies
       filename = 'companies'
@@ -207,33 +207,31 @@ def stock_price(timestamp):
                 company_stock_price = list.from_csv(filename_historical)
                 if not company_stock_price or company_stock_price == [' ']:
                   # load from web
-                  company_stock_price = company_historical_web(company, data)
+                  company_stock_price = company_historical_from_web(company, data)
             else:
               # load from web
-              company_stock_price = company_historical_web(company, data)
+              company_stock_price = company_historical_from_web(company, data)
 
             
             company_historical.append(company_stock_price)
 
-          if company_historical and project != 'csv':
-              hist = []
-              for t, table in enumerate(company_historical):
-                  for l, line in enumerate(table):
-                      hist.append(line)
-              hist.sort(key=lambda x: x[0], reverse=True)
-              # hist.sort(key=lambda x: x[1], reverse=True)
-              filename = company[0] + ' historical price'
-              company_historical = list.to_csv(filename, hist)
+        if company_historical:
+            hist = []
+            for t, table in enumerate(company_historical):
+                for l, line in enumerate(table):
+                    hist.append(line)
+            hist.sort(key=lambda x: x[0], reverse=True)
+            # hist.sort(key=lambda x: x[1], reverse=True)
+            filename = company[0] + ' historical price'
+            company_historical = list.to_csv(filename, hist)
 
     except Exception as e:
         system.trouble(e, sys._getframe().f_code.co_name)
-
-
-def company_historical_web(company, data):
+def company_historical_from_web(company, data):
   ''' load historical quotes from b3 web '''
   # print(sys._getframe().f_code.co_name)
   try:
-    company_historical_web = []
+    company_historical_from_web = []
     data_1 = datetime.strptime(data[1], '%Y-%m')
     data_1 = data_1.strftime('%m-%Y')
     url = 'https://bvmf.bmfbovespa.com.br/sig/FormConsultaMercVista.asp?strTipoResumo=RES_MERC_VISTA&strSocEmissora=' + data[0] + '&strDtReferencia=' + data_1 + '&intCodNivel=2&intCodCtrl=160'
@@ -247,26 +245,28 @@ def company_historical_web(company, data):
             xpath = '//*[@id="tblResDiario"]/tbody/tr[' + str(r) + ']/td/table'
             quotes = get_quotes(xpath, data)
             if quotes:
-                company_historical_web.append(quotes)
+                company_historical_from_web.append(quotes)
         #flatten list
-        company_historical_web = [item for sublist in company_historical_web for item in sublist]
+        company_historical_from_web = [item for sublist in company_historical_from_web for item in sublist]
 
-# strptime
-        company_historical_web
+        # cleanup time
+        for item in company_historical_from_web:
+          item[1] = item[1].strftime('%Y-%m-%d' + ' ' + '%H:%M:%S')
+        # # strptime
+#         company_historical_from_web
 
-    data_1 = datetime.strptime(data[1], '%Y-%m')
-    data_1 = data_1.strftime('%m-%Y')
+#     data_1 = datetime.strptime(data[1], '%Y-%m')
+#     data_1 = data_1.strftime('%m-%Y')
 
-        if not company_historical_web:
-            company_historical_web = [' ']
+        if not company_historical_from_web:
+            company_historical_from_web = [' ']
 
         filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
-        company_historical_web = list.to_csv(filename_historical, company_historical_web)
+        company_historical_from_web = list.to_csv(filename_historical, company_historical_from_web)
 
-        return company_historical_web
+        return company_historical_from_web
   except Exception as e:
     system.trouble(e, sys._getframe().f_code.co_name)
-
 def get_quotes(xpath, data):
     """get quotes from table"""
     # print(sys._getframe().f_code.co_name)

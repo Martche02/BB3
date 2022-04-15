@@ -1,6 +1,6 @@
 import utils.config as config
 import utils.system as system
-import utils.company as company
+import utils.company_prices as company_prices
 import sys
 
 import socket
@@ -144,11 +144,11 @@ def app_hist(timestamp):
 
         project = config.choose(options)
         if project == 1:
-            company.grab(config.timestamp)
+            company_prices.grab(config.timestamp)
         elif project == 2:
-            company.datarange(config.timestamp)
+            company_prices.datarange(config.timestamp)
         elif project == 3:
-            company.stock_price(config.timestamp)
+            company_prices.stock_price(config.timestamp)
         else:
             quit()
         print('done')
