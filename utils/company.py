@@ -197,20 +197,23 @@ def stock_price(timestamp):
           datarange, company_not_found = datarange_from_web(company, filename, company_not_found)
         if datarange:
           # get historical stock prices
+          company_historical = []
           for d, data in enumerate(datarange):
             print(c, company[0], d, data[1])
             filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
             if project == 'csv':
               # load from csv
-                company_historical = []
-                company_historical = list.from_csv(filename_historical)
-
-                if not (company_historical or company_historical == [' ']):
+                company_stock_price = []
+                company_stock_price = list.from_csv(filename_historical)
+                if not company_stock_price or company_stock_price == [' ']:
                   # load from web
-                  company_historical = company_historical_web(company, data, filename_historical)
+                  company_stock_price = company_historical_web(company, data)
             else:
               # load from web
-              company_historical = company_historical_web(company, data, filename_historical)
+              company_stock_price = company_historical_web(company, data)
+
+            
+            company_historical.append(company_stock_price)
 
           if company_historical and project != 'csv':
               hist = []
@@ -226,12 +229,11 @@ def stock_price(timestamp):
         system.trouble(e, sys._getframe().f_code.co_name)
 
 
-def company_historical_web(company, data, filename_historical):
+def company_historical_web(company, data):
   ''' load historical quotes from b3 web '''
   # print(sys._getframe().f_code.co_name)
   try:
-    company_historical = []
-    table = []
+    company_historical_web = []
     data_1 = datetime.strptime(data[1], '%Y-%m')
     data_1 = data_1.strftime('%m-%Y')
     url = 'https://bvmf.bmfbovespa.com.br/sig/FormConsultaMercVista.asp?strTipoResumo=RES_MERC_VISTA&strSocEmissora=' + data[0] + '&strDtReferencia=' + data_1 + '&intCodNivel=2&intCodCtrl=160'
@@ -245,13 +247,23 @@ def company_historical_web(company, data, filename_historical):
             xpath = '//*[@id="tblResDiario"]/tbody/tr[' + str(r) + ']/td/table'
             quotes = get_quotes(xpath, data)
             if quotes:
-                table.append(quotes)
+                company_historical_web.append(quotes)
         #flatten list
-        table = [item for sublist in table for item in sublist]
-        if not table:
-            table = [' ']
-        table = list.to_csv(filename_historical, table)
-        company_historical.append(table)
+        company_historical_web = [item for sublist in company_historical_web for item in sublist]
+
+# strptime
+        company_historical_web
+
+    data_1 = datetime.strptime(data[1], '%Y-%m')
+    data_1 = data_1.strftime('%m-%Y')
+
+        if not company_historical_web:
+            company_historical_web = [' ']
+
+        filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
+        company_historical_web = list.to_csv(filename_historical, company_historical_web)
+
+        return company_historical_web
   except Exception as e:
     system.trouble(e, sys._getframe().f_code.co_name)
 
