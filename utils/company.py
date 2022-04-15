@@ -187,7 +187,6 @@ def stock_price(timestamp):
       # get company data range
       company_full_datarange = []
       for c, company in enumerate(companies):
-        print(c, company[0])
         filename = company[0] + ' datarange'
 
         # get datarange
@@ -198,19 +197,22 @@ def stock_price(timestamp):
           datarange, company_not_found = datarange_from_web(company, filename, company_not_found)
         if datarange:
           # get historical stock prices
-          if project == 'csv':
-            # load from csv
-            company_historical = []
-            file = False
-            company_historical = company_historical(c, company, datarange)
-          else:
-            # load from web
-            pass
+          for d, data in enumerate(datarange):
+            print(c, company[0], d, data[1])
+            filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
+            if project == 'csv':
+              # load from csv
+                company_historical = []
+                company_historical = list.from_csv(filename_historical)
 
+                if not (company_historical or company_historical == [' ']):
+                  # load from web
+                  company_historical = company_historical_web(company, data, filename_historical)
+            else:
+              # load from web
+              company_historical = company_historical_web(company, data, filename_historical)
 
-
-
-          if company_historical and not file:
+          if company_historical and project != 'csv':
               hist = []
               for t, table in enumerate(company_historical):
                   for l, line in enumerate(table):
@@ -218,48 +220,96 @@ def stock_price(timestamp):
               hist.sort(key=lambda x: x[0], reverse=True)
               # hist.sort(key=lambda x: x[1], reverse=True)
               filename = company[0] + ' historical price'
-              company_historical = list_to_csv(filename, hist)
+              company_historical = list.to_csv(filename, hist)
 
     except Exception as e:
-        trouble(e, sys._getframe().f_code.co_name)
+        system.trouble(e, sys._getframe().f_code.co_name)
 
-def company_historical(c, company, datarange):
-  ''' load historical quotes from b3 '''
+
+def company_historical_web(company, data, filename_historical):
+  ''' load historical quotes from b3 web '''
   # print(sys._getframe().f_code.co_name)
   try:
-    for d, data in enumerate(datarange):
-      print(k, company[0], d, data[1])
-      filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
-      table = list.from_csv(filename_historical)
-
-
-
-
-                if not (table or table == [' ']):
-                    table = []
-                    data_1 = datetime.strptime(data[1], '%Y-%m')
-                    data_1 = data_1.strftime('%m-%Y')
-                    url = 'https://bvmf.bmfbovespa.com.br/sig/FormConsultaMercVista.asp?strTipoResumo=RES_MERC_VISTA&strSocEmissora=' + data[0] + '&strDtReferencia=' + data_1 + '&intCodNivel=2&intCodCtrl=160'
-                    manual_trouble = [['BEPA', '2003-08'], ['BEPA', '2003-06'], ['BEPA', '2003-04'], ['BEPA', '2003-03'], ['BEPA', '2003-02']]
-                    manual_trouble_0 = ['BEPA']
-                    if data[0] in manual_trouble_0:
-                        print('trouble', manual_trouble_0)
-                    else:
-                        browser.get(url)
-                        for r in range(0,20,2):
-                            xpath = '//*[@id="tblResDiario"]/tbody/tr[' + str(r) + ']/td/table'
-                            quotes = get_quotes(xpath, data)
-                            if quotes:
-                                table.append(quotes)
-                        table = [item for sublist in table for item in sublist]
-                        if not table:
-                            table = [' ']
-                        table = list_to_csv(filename_historical_price, table)
-                        company_historical.append(table)
-
+    company_historical = []
+    table = []
+    data_1 = datetime.strptime(data[1], '%Y-%m')
+    data_1 = data_1.strftime('%m-%Y')
+    url = 'https://bvmf.bmfbovespa.com.br/sig/FormConsultaMercVista.asp?strTipoResumo=RES_MERC_VISTA&strSocEmissora=' + data[0] + '&strDtReferencia=' + data_1 + '&intCodNivel=2&intCodCtrl=160'
+    manual_trouble = [['BEPA', '2003-08'], ['BEPA', '2003-06'], ['BEPA', '2003-04'], ['BEPA', '2003-03'], ['BEPA', '2003-02']]
+    manual_trouble_0 = ['BEPA']
+    if data[0] in manual_trouble_0: # rudimentary manual error correction
+        print('trouble', manual_trouble_0)
+    else:
+        system.browser.get(url)
+        for r in range(0,20,2):
+            xpath = '//*[@id="tblResDiario"]/tbody/tr[' + str(r) + ']/td/table'
+            quotes = get_quotes(xpath, data)
+            if quotes:
+                table.append(quotes)
+        #flatten list
+        table = [item for sublist in table for item in sublist]
+        if not table:
+            table = [' ']
+        table = list.to_csv(filename_historical, table)
+        company_historical.append(table)
   except Exception as e:
-    trouble(e, sys._getframe().f_code.co_name)
+    system.trouble(e, sys._getframe().f_code.co_name)
 
+def get_quotes(xpath, data):
+    """get quotes from table"""
+    # print(sys._getframe().f_code.co_name)
+    try:
+        quotes = system.table_parser(xpath)
+        if quotes:
+            preheader = quotes.pop(0)
+            header = quotes.pop(0)
+            footer = quotes.pop()
+            if preheader:
+                preheader[0] = preheader[0].replace('NOME DA ACAO ', '').split(' ')
+                stock = preheader[0][0]
+                ticker = preheader[0][1]
+            if quotes:
+            # data treatment
+                for r, row in enumerate(quotes):
+                    for c, col in enumerate(row):
+                        try:
+                            if c == 0:
+                                quotes[r][c] = datetime.strptime(col + '-' + data[1], '%d-%Y-%m')
+                            elif c == 2: # número de negócios
+                                quotes[r][c] = int(col)
+                            elif c == 3: # participação do número de negócios
+                                quotes[r][c] = float(col)/1000/100
+                            elif c == 4: # quantidade de negócios
+                                if '*' in col:
+                                    unidadeConta = 1000
+                                else:
+                                    unidadeConta = 1
+                                quotes[r][c] = int(col) * unidadeConta
+                            elif c == 5: # volume de negócios
+                                quotes[r][c] = int(col)
+                            elif c == 6: # Participação no volume total negociado
+                                quotes[r][c] = float(col)/1000/100
+                            elif c == 7: # preço de abertura
+                                quotes[r][c] = float(col)/100
+                            elif c == 8: # preço mínimo
+                                quotes[r][c] = float(col)/100
+                            elif c == 9: # preço máximo
+                                quotes[r][c] = float(col)/100
+                            elif c == 10: # preço médio
+                                quotes[r][c] = float(col)/100
+                            elif c == 11: # preço de fechamento
+                                quotes[r][c] = float(col)/100
+                        except Exception as e:
+                            pass
+                quotes.sort(key=lambda x: x[0], reverse=True)
+
+            for row in quotes:
+                row.insert(0, ticker)
+        return quotes
+    except Exception as e:
+      # system.trouble(e, sys._getframe().f_code.co_name)
+      return False
+  
 
 if __name__ == '__main__':
   try:
