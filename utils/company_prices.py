@@ -34,12 +34,12 @@ def grab(timestamp):
     # if not companies_full:
     #     companies_full = list.from_csv(filename)
 
+    project = project_load()
 
     alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     for char in alphabet:
       filename_company = filename + ' ' + char
       
-      project = project_load()
 
       if project == 'csv':
       # get companies from csv
@@ -329,8 +329,8 @@ def market_price(timestamp):
   ''' bind companies prices in market prices '''
   # print(sys._getframe().f_code.co_name)
   try:
-    # project = project_load()
-    project = 'csv'
+    project = project_load()
+    # project = 'csv'
 
     # bigprice
     bigprice = []
