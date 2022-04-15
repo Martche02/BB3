@@ -7,9 +7,6 @@ if __name__ == '__main__':
     browser = config.load()
 
     system.browser.get('https://www.google.com/')
-
-    
-    shortcut = company_prices.stock_price(config.timestamp)
     
     app = config.app(config.timestamp)
     print('done')

@@ -141,6 +141,7 @@ def app_hist(timestamp):
         options.append('COMP - Get list of COMPANIES')
         options.append('DATA - Get DATA RANGE for companies')
         options.append('STOCK - Get STCK DATA for DATA RANGE for companies')
+        options.append('MARKET - Get MARKET prices by date and company')
 
         project = config.choose(options)
         if project == 1:
@@ -149,6 +150,8 @@ def app_hist(timestamp):
             company_prices.datarange(config.timestamp)
         elif project == 3:
             company_prices.stock_price(config.timestamp)
+        elif project == 4:
+            company_prices.market_price(config.timestamp)
         else:
             quit()
         print('done')

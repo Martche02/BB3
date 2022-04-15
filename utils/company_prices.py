@@ -74,6 +74,7 @@ def grab(timestamp):
     return companies_full
   except Exception as e:
     system.trouble(e, sys._getframe().f_code.co_name)
+
 def datarange(timestamp):
   """get company data range"""
     # print(sys._getframe().f_code.co_name)
@@ -171,6 +172,7 @@ def datarange_from_web(company, filename, company_not_found):
     return company_datarange, company_not_found
   except Exception as e:
     return [], company_not_found
+
 def stock_price(timestamp):
     """get company stock prices"""
     # print(sys._getframe().f_code.co_name)
@@ -321,7 +323,42 @@ def get_quotes(xpath, data):
     except Exception as e:
       # system.trouble(e, sys._getframe().f_code.co_name)
       return False
-  
+
+def market_price(timestamp):
+  ''' bind companies prices in market prices '''
+  # print(sys._getframe().f_code.co_name)
+  try:
+    # project = project_load()
+    project = 'csv'
+
+    # bigprice
+    bigprice = []
+
+    # get companies
+    filename = 'companies'
+    companies = list.from_csv(filename)
+    if not companies:
+      companies = grab(timestamp)
+
+    # get company data range
+    for c, company in enumerate(companies):
+      print(c, company[0])
+      filename = company[0] + ' datarange'
+      datarange = list.from_csv(filename)
+      if datarange:
+        for d, data in enumerate(datarange):
+          filename_historical = company[0] + ' ' + data[0] + ' ' + data[1] + ' historical price'
+          company_stock_price = list.from_csv(filename_historical)
+
+          if company_stock_price:
+            for r, row in enumerate(company_stock_price):
+              bigprice.append(row)
+    if bigprice:
+      bigprice = list.to_csv('bigprice', bigprice)
+
+
+  except Exception as e:
+    system.trouble(e, sys._getframe().f_code.co_name)
 
 if __name__ == '__main__':
   try:
