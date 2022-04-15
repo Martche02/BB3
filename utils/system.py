@@ -1,3 +1,4 @@
+import utils.system as system
 import utils.config as config
 import sys
 
@@ -10,16 +11,60 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
-def browser():
+import unidecode
+import string
+
+def table_parser(xpath):
+    """ navigate trought any table XPath and return content in list"""
+    # print(sys._getframe().f_code.co_name, xpath)
+    try:
+        # get lenght
+        assert (EC.element_to_be_clickable((By.XPATH, xpath)))
+        xpath_row = xpath + '/tbody/tr'
+        xpath_col = xpath_row + '[3]/td'
+        rows = len(browser.find_elements(By.XPATH, xpath_row))
+        cols = len(browser.find_elements(By.XPATH, xpath_col ))
+
+        # parse table
+        try:
+            table = []
+            for r in range(1, rows + 1):
+                line = []
+                for c in range(1, cols + 1):
+                    try:
+                        table_xpath = xpath_row + '[' + str(r) + ']/td[' + str(c) + ']'
+                        text = browser.find_element(By.XPATH, table_xpath).text
+                        text = unidecode.unidecode(text).translate(str.maketrans('', '', string.punctuation)).upper().strip()
+                        text.replace('\n', ' ')
+                        line.append(text)
+                    except Exception as e:
+                        pass
+                table.append(line)
+
+                if r % config.batch_table == 0:
+                    print('table row ', str(r), 'of', str(rows))
+        except:
+            pass
+
+        return table
+    except Exception as e:
+        system.trouble(e, sys._getframe().f_code.co_name)
+
+def load_browser():
     """load browser"""
     try:
         # browser
-        browser = webdriver.Chrome(service=Service(config.user_variables.chrome))
+        global browser
+        browser = webdriver.Chrome(service=Service(config.chrome))
         browser.minimize_window()
         exceptionsIgnore = (NoSuchElementException, StaleElementReferenceException,)
+        
+        global wait
+        global wait_little
         wait = WebDriverWait(browser, config.secs_to_wait, ignored_exceptions=exceptionsIgnore)
-        wait2 = WebDriverWait(browser, 10/1000, ignored_exceptions=exceptionsIgnore)
-        return True
+        wait_little = WebDriverWait(browser, config.secs_to_wait/1000, ignored_exceptions=exceptionsIgnore)
+        
+        return browser
     except Exception as e:
         trouble(e, sys._getframe().f_code.co_name)
 

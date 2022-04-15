@@ -2,8 +2,8 @@ import utils.config as config
 import utils.system as system
 import sys
 
-def drive()
-    gsheet = gspread.authorize(credentials)
+def drive():
+    gsheet = config.gspread.authorize(config.credentials)
 
     listagemWorksheet = getSheet(masterSpreadsheet, masterSheet)
     logWorksheet = getSheet(masterSpreadsheet, masterLogSheet)
